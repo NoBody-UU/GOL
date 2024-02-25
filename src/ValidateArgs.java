@@ -43,7 +43,6 @@ public class ValidateArgs {
                         this.maxGenerations = Integer.parseInt(parts[1]);
                         break;
                     case "p":
-                        // este metodo me lo sugirio el IDE, lo que hace es que si el string es igual a "rnd" igrando las mayusculas
                         if (parts[1].equalsIgnoreCase("rnd")) {
                             this.population = "rnd";
                             break;
@@ -52,7 +51,7 @@ public class ValidateArgs {
                         String population = parts[1].replace("\"", "");
                         String[] rows = population.split("#");
 
-                        // aqui valido que la cantidad de filas sea igual a la altura
+
                         if (rows.length > this.height) {
                             this.isValid = false;
                             break;
@@ -79,7 +78,7 @@ public class ValidateArgs {
             }
         }
 
-        if (height != 10 && height != 20 && height != 40 && height != 80) {
+        if (height != 10 && height != 20 && height != 40) {
             isValid = false;
         }
 

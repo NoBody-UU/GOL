@@ -1,11 +1,11 @@
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+
 public class Game extends JFrame {
     /**
-     * Declaración de variables
+     * Declaración de Propiedades
      * initialPopulation: población inicial de la cuadrícula
      * gridButtons: matriz de botones que representan las celdas de la cuadrícula
      * grid: matriz de booleanos que representa el estado de las celdas de la cuadrícula
@@ -13,47 +13,37 @@ public class Game extends JFrame {
      * gameStarted: indica si el juego ha comenzado o no
      */
     private final String[] initialPopulation;
-    private final JButton[][] gridButtons;
     private boolean[][] grid;
     private Timer timer;
-    private boolean gameStarted = false;
+    protected boolean gameStarted = false;
+    private final Listener listener;
+    private  final Grid gridManager;
+    private final int maxGenerations;
+    private final int speed;
 
 
     public Game(int height, int width, int maxGenerations, int speed, String population) {
         /*
-         * Configuración de la ventana principal
-         * 1. Establecer el título
-         * 2. Establecer el ícono
-         * 3. Establecer la operación de cierre
-         * 4. Establecer el tamaño de la ventana
-         * 5. Deshabilitar el cambio de tamaño
-         * 6. Centrar la ventana
+         * Configuración de la cuadrícula y los botones
+         * grid: matriz de booleanos que representa el estado de las celdas de la cuadrícula, es la parte lógica y escogí usar booleanos para que sea más fácil de manejar si esta viva o muerta
          */
+        this.grid = new boolean[height][width];
+        this.initialPopulation = population.equals("rnd") ? null : population.split("#");
+        this.listener = new Listener(this);
+        this.gridManager = new Grid(this);
+        this.maxGenerations = maxGenerations;
+        this.speed = speed;
+
+
         setTitle("Game of Life - Huber");
         setIconImage(new ImageIcon("src/Assets/logo.png").getImage());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(820, 820);
+        // establecer el tamaño de la ventana en función del tamaño de la cuadrícula
+        setSize(width * 20, height * 20);
         setResizable(false);
         setLocationRelativeTo(null);
 
-        /*
-         * Configuración de la cuadrícula y los botones
-         * gridButtons: matriz de botones que representan las celdas de la cuadrícula, es la parte visual
-         * grid: matriz de booleanos que representa el estado de las celdas de la cuadrícula, es la parte lógica y escogí usar booleanos para que sea más fácil de manejar si esta viva o muerta
-         */
-        gridButtons = new JButton[height][width];
-        grid = new boolean[height][width];
-        initialPopulation = population.equals("rnd") ? null : population.split("#");
-
-
-        initializeGrid();
-        setupUI();
-        setupTimer(maxGenerations, speed);
-        //esperar 2 segundos antes de iniciar el juego
-        new Timer(2000, e -> {
-            startGame();
-            ((Timer) e.getSource()).stop();
-        }).start();
+        this.initGame();
     }
 
     private void initializeGrid() {
@@ -79,23 +69,13 @@ public class Game extends JFrame {
 
 
     private void setupUI() {
-        setLayout(new GridLayout(grid.length + 1, grid[0].length));
-
-        for (int i = 0; i < grid.length; i++) {
-            for (int j = 0; j < grid[0].length; j++) {
-                JButton button = new JButton();
-                button.setEnabled(false);
-                button.setBackground(grid[i][j] ? Color.BLACK : Color.WHITE);
-                gridButtons[i][j] = button;
-                add(button);
-            }
-        }
+        this.gridManager.init();
 
     }
 
-    private void setupTimer(int maxGenerations, int speed) {
+    private void setupTimer() {
         // Configurar el temporizador con el intervalo de actualización
-        timer = new Timer(speed, new ActionListener() {
+        timer = new Timer(this.speed, new ActionListener() {
             private int generationCount = 0;
 
             public void actionPerformed(ActionEvent e) {
@@ -110,18 +90,20 @@ public class Game extends JFrame {
         });
     }
 
-    private void startGame() {
+    public void startGame() {
         // Iniciar el temporizador solo si el juego no ha comenzado ya
         if (!gameStarted) {
-            timer.start();
-            gameStarted = true;
+            this.timer.start();
+            this.gameStarted = true;
+            this.addKeyListener(listener);
         }
+
+
     }
 
-    private void stopGame() {
-        // Detener el temporizador
-        timer.stop();
-        gameStarted = false;
+    public void stopGame() {
+        this.gameStarted = false;
+        this.timer.stop();
     }
 
     private void updateGrid() {
@@ -143,7 +125,7 @@ public class Game extends JFrame {
 
         // Actualizar la cuadrícula y los botones
         grid = newGrid;
-        updateButtons();
+        this.gridManager.updateButtons();
     }
 
     private int countLiveNeighbors(int row, int col) {
@@ -175,13 +157,17 @@ public class Game extends JFrame {
         return count;
     }
 
-    private void updateButtons() {
-        // Actualizar la apariencia de los botones según la cuadrícula
-        for (int i = 0; i < grid.length; i++) {
-            for (int j = 0; j < grid[0].length; j++) {
-                gridButtons[i][j].setBackground(grid[i][j] ? Color.BLACK : Color.WHITE);
-            }
-        }
+
+    public boolean[][] getGrid() {
+        return grid;
+    }
+
+    // method to start all the game
+    public void initGame() {
+        this.initializeGrid();
+        this.setupUI();
+        this.setupTimer();
+        this.startGame();
     }
 
 }
